@@ -1,0 +1,190 @@
+{
+  "backend": {
+    "pipeline": 3,
+    "timeout_sec": 10,
+    "type": "remote",
+    "url": "http://127.0.0.1:8500"
+  },
+  "cameras": [
+    {
+      "id": "cam1",
+      "loop": true,
+      "models": [
+        "pose",
+        "det"
+      ],
+      "name": "Склад, стеллажи",
+      "process_fps": 10,
+      "realtime": true,
+      "rules": {
+        "running": {
+          "speed_h_per_s": 0.5
+        }
+      },
+      "source": "../videos/fall.mp4",
+      "zones": []
+    },
+    {
+      "id": "cam2",
+      "loop": true,
+      "models": [
+        "pose",
+        "det"
+      ],
+      "name": "Склад, стеллажи",
+      "process_fps": 10,
+      "realtime": true,
+      "rules": {},
+      "source": "../videos/fire.mp4",
+      "zones": []
+    },
+    {
+      "id": "cam3",
+      "loop": true,
+      "models": [
+        "pose",
+        "det"
+      ],
+      "name": "Склад, стеллажи",
+      "process_fps": 10,
+      "realtime": true,
+      "rules": {},
+      "source": "../videos/run.mp4",
+      "zones": []
+    },
+    {
+      "id": "cam4",
+      "loop": true,
+      "models": [
+        "pose",
+        "det"
+      ],
+      "name": "Склад, стеллажи",
+      "process_fps": 10,
+      "realtime": true,
+      "rules": {},
+      "source": "../videos/car.mp4",
+      "zones": []
+    }
+  ],
+  "dedup": {
+    "cooldown_sec": 60,
+    "gap_sec": 0.7,
+    "mode": "track",
+    "release_sec": 5
+  },
+  "models": {
+    "det": {
+      "conf": 0.3,
+      "iou": 0.5,
+      "keep": [
+        "person",
+        "cell phone",
+        "truck",
+        "car",
+        "bus",
+        "motorcycle"
+      ],
+      "meta": "../models/yolov8m.json",
+      "onnx": "../models/yolov8m_raw.onnx",
+      "tpu": "../models/yolov8m.tpu"
+    },
+    "pose": {
+      "conf": 0.35,
+      "iou": 0.5,
+      "meta": "../models/yolov8m-pose.json",
+      "onnx": "../models/yolov8m-pose_raw.onnx",
+      "tpu": "../models/yolov8m-pose.tpu"
+    },
+    "ppe": {
+      "conf": 0.35,
+      "enabled": false,
+      "keep": [
+        "helmet",
+        "safety-vest"
+      ],
+      "meta": "../models/sh17.json",
+      "onnx": "../models/sh17_raw.onnx",
+      "tpu": "../models/sh17.tpu"
+    },
+    "world": {
+      "conf": 0.25,
+      "enabled": false,
+      "iou": 0.5,
+      "meta": "../models/world.json",
+      "onnx": "../models/world_raw.onnx",
+      "tpu": "../models/world.tpu"
+    }
+  },
+  "rules": {
+    "fall": {
+      "confirm_sec": 1.5,
+      "lying_ratio": 1.15,
+      "still_frac": 0.25,
+      "still_sec": 2.0,
+      "torso_angle": 55
+    },
+    "fire": {
+      "confirm_sec": 2.0,
+      "labels": [
+        "fire",
+        "smoke",
+        "flame"
+      ],
+      "min_score": 0.4
+    },
+    "no_helmet": {
+      "confirm_sec": 3.0,
+      "min_person_px": 90
+    },
+    "no_vest": {
+      "confirm_sec": 3.0,
+      "enabled": false,
+      "min_person_px": 90
+    },
+    "phone": {
+      "confirm_sec": 2.0,
+      "labels": [
+        "cell phone"
+      ],
+      "max_dist_h": 0.35,
+      "min_score": 0.35
+    },
+    "running": {
+      "confirm_sec": 1.0,
+      "min_person_px": 60,
+      "speed_h_per_s": 1.6,
+      "window_sec": 0.8
+    },
+    "smoking": {
+      "confirm_sec": 2.0,
+      "labels": [
+        "cigarette"
+      ],
+      "min_score": 0.3
+    },
+    "vehicle_proximity": {
+      "confirm_sec": 0.5,
+      "distance_person_heights": 0.5,
+      "min_vehicle_speed": 0.15,
+      "require_moving": true
+    },
+    "zone": {
+      "confirm_sec": 1.0
+    }
+  },
+  "server": {
+    "data_dir": "../data",
+    "host": "0.0.0.0",
+    "port": 8081,
+    "web_dir": "../web"
+  },
+  "vehicle_classes": [
+    "truck",
+    "car",
+    "bus",
+    "motorcycle",
+    "forklift"
+  ],
+  "webhook": ""
+}

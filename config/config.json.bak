@@ -1,0 +1,103 @@
+{
+  // Пути — относительно папки этого файла
+  "server": { "host": "0.0.0.0", "port": 8081, "web_dir": "../web", "data_dir": "../data" },
+
+  // Где считаются нейросети:
+  //   "remote" — на LinQ: C++ -> python/linq_server.py -> RabbitMQ облака LinQ -> TPU (основной режим)
+  //   "linq"   — напрямую через libtpu, если приложение запущено на машине с ускорителем
+  //   "opencv" — ONNX на CPU вашей машины (отладка без ускорителя)
+  // Для LinQ (варианты А и Б из README: relay или serve на этой машине) замените строку ниже на:
+  //   "backend": { "type": "remote", "url": "http://127.0.0.1:8500", "timeout_sec": 10, "pipeline": 3 },
+  // Вариант В (serve в Jupyter через прокси):
+  //   "backend": { "type": "remote", "url": "https://<адрес Jupyter>/user/<логин>/proxy/8500",
+  //                "headers": { "Authorization": "token <токен Jupyter>" }, "timeout_sec": 10, "pipeline": 3 },
+  "backend": { "type": "remote", "url": "http://127.0.0.1:8500", "timeout_sec": 10, "pipeline": 3 },
+
+  "models": {
+    // люди + скелет: падение, бег, зоны, сближение с техникой
+    "pose": { "meta": "../models/yolov8m-pose.json", "onnx": "../models/yolov8m-pose_raw.onnx",
+              "tpu": "../models/yolov8m-pose.tpu", "conf": 0.35, "iou": 0.5 },
+    // объекты COCO: телефон, транспорт
+    "det":  { "meta": "../models/yolov8m.json", "onnx": "../models/yolov8m_raw.onnx",
+              "tpu": "../models/yolov8m.tpu", "conf": 0.3, "iou": 0.5,
+              "keep": ["person", "cell phone", "truck", "car", "bus", "motorcycle"] },
+    // (опционально) YOLO-World со своими классами: погрузчик, сигарета, огонь, дым
+    "world": { "enabled": false, "meta": "../models/world.json", "onnx": "../models/world_raw.onnx",
+               "tpu": "../models/world.tpu", "conf": 0.25, "iou": 0.5 },
+    // (опционально) СИЗ: веса SH17 -> каска, жилет
+    "ppe":  { "enabled": false, "meta": "../models/sh17.json", "onnx": "../models/sh17_raw.onnx",
+              "tpu": "../models/sh17.tpu", "conf": 0.35, "keep": ["helmet", "safety-vest"] }
+  },
+
+  "vehicle_classes": ["truck", "car", "bus", "motorcycle", "forklift"],
+
+  // Подавление повторов: mode "track" — одно событие на человека и тип, пока он в кадре
+  "dedup": { "mode": "track", "gap_sec": 0.7, "release_sec": 5, "cooldown_sec": 60 },
+
+  // Куда отправлять события (POST JSON): бот мессенджера, СКУД, EHS. Пусто — не отправлять
+  "webhook": "",
+
+  // Правила по умолчанию; каждую можно переопределить в камере ("rules": {...})
+  "rules": {
+    "fall":              { "confirm_sec": 1.5, "lying_ratio": 1.15, "torso_angle": 55, "still_sec": 2.0, "still_frac": 0.25 },
+    "vehicle_proximity": { "confirm_sec": 0.5, "distance_person_heights": 0.5, "require_moving": true, "min_vehicle_speed": 0.15 },
+    "running":           { "confirm_sec": 1.0, "window_sec": 0.8, "speed_h_per_s": 1.6, "min_person_px": 60 },
+    "zone":              { "confirm_sec": 1.0 },
+    "phone":             { "confirm_sec": 2.0, "labels": ["cell phone"], "min_score": 0.35, "max_dist_h": 0.35 },
+    "smoking":           { "confirm_sec": 2.0, "labels": ["cigarette"], "min_score": 0.3 },
+    "fire":              { "confirm_sec": 2.0, "labels": ["fire", "smoke", "flame"], "min_score": 0.4 },
+    "no_helmet":         { "confirm_sec": 3.0, "min_person_px": 90 },
+    "no_vest":           { "enabled": false, "confirm_sec": 3.0, "min_person_px": 90 }
+  },
+
+  "cameras": [
+    {
+      "id": "cam1",
+      "name": "Склад, стеллажи",
+      "source": "../videos/fall.mp4",
+      "loop": true,
+      "realtime": true,
+      "process_fps": 10,
+      "models": ["pose", "det"],
+      "zones": [],
+      "rules": { "running": { "speed_h_per_s": 1.8 } }
+    },
+    {
+      "id": "cam2",
+      "name": "Склад, стеллажи",
+      "source": "../videos/all.mp4",
+      "loop": true,
+      "realtime": true,
+      "process_fps": 10,
+      "models": ["pose", "det"],
+      "zones": [
+      ],
+      "rules": {}
+    },
+    {
+      "id": "cam3",
+      "name": "Склад, стеллажи",
+      "source": "../videos/run.mp4",
+      "loop": true,
+      "realtime": true,
+      "process_fps": 10,
+      "models": ["pose", "det"],
+      "zones": [
+      ],
+      "rules": {}
+    },
+    {
+      "id": "cam4",
+      "name": "Склад, стеллажи",
+      "source": "../videos/car.mp4",
+      "loop": true,
+      "realtime": true,
+      "process_fps": 10,
+      "models": ["pose", "det"],
+      "zones": [
+      ],
+      "rules": {}
+    }
+  ]
+}
+
