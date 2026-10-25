@@ -1,0 +1,112 @@
+{
+  "name": "yolov8m-pose",
+  "kind": "pose",
+  "classes": [
+    "person"
+  ],
+  "imgsz": 640,
+  "strides": [
+    8,
+    16,
+    32
+  ],
+  "reg_max": 16,
+  "kpt_shape": [
+    17,
+    3
+  ],
+  "cls_has_sigmoid": true,
+  "input": {
+    "name": "images",
+    "layout": "NCHW",
+    "color": "RGB",
+    "scale": "1/255",
+    "letterbox_pad": 114
+  },
+  "outputs": [
+    {
+      "name": "box_p3",
+      "shape": [
+        1,
+        64,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "cls_p3",
+      "shape": [
+        1,
+        1,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "kpt_p3",
+      "shape": [
+        1,
+        51,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "box_p4",
+      "shape": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "cls_p4",
+      "shape": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "kpt_p4",
+      "shape": [
+        1,
+        51,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "box_p5",
+      "shape": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "cls_p5",
+      "shape": [
+        1,
+        1,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "kpt_p5",
+      "shape": [
+        1,
+        51,
+        20,
+        20
+      ]
+    }
+  ],
+  "onnx": "yolov8m-pose_raw.onnx",
+  "opset": 12,
+  "activation": "SiLU"
+}
