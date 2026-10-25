@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafetyVision · контроль ТБ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">◆</span> SafetyVision <small>контроль промышленной безопасности · LinQ TPU</small></div>
+  <nav>
+    <button data-tab="monitor" class="active">Мониторинг</button>
+    <button data-tab="journal">Журнал</button>
+    <button data-tab="zones">Зоны</button>
+    <button data-tab="stats">Статистика</button>
+    <button data-tab="perf">Производительность</button>
+  </nav>
+  <div class="hdr-right">
+    <span id="newCount" class="pill">0 новых</span>
+    <label class="sound"><input type="checkbox" id="soundOn" checked> звук</label>
+  </div>
+</header>
+
+<main>
+  <!-- Мониторинг -->
+  <section id="tab-monitor" class="tab active">
+    <div class="monitor">
+      <div id="camGrid" class="cam-grid"></div>
+      <aside class="feed">
+        <h3>Лента событий</h3>
+        <div id="feed"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Журнал -->
+  <section id="tab-journal" class="tab">
+    <div class="filters">
+      <select id="fType"><option value="">Все нарушения</option></select>
+      <select id="fCamera"><option value="">Все камеры</option></select>
+      <select id="fSeverity">
+        <option value="">Любая важность</option><option value="critical">Критично</option>
+        <option value="high">Высокая</option><option value="warning">Предупреждение</option>
+      </select>
+      <select id="fStatus">
+        <option value="">Любой статус</option><option value="new">Новое</option>
+        <option value="confirmed">Подтверждено</option><option value="false">Ложное</option>
+        <option value="forwarded">Передано мастеру</option>
+      </select>
+      <input id="fZone" placeholder="Зона">
+      <label>с <input type="datetime-local" id="fFrom"></label>
+      <label>по <input type="datetime-local" id="fTo"></label>
+      <button id="fApply" class="primary">Показать</button>
+      <a id="csvLink" class="btn" href="api/export.csv">Экспорт CSV</a>
+    </div>
+    <table class="journal">
+      <thead><tr><th>Кадр</th><th>Время</th><th>Камера</th><th>Нарушение</th><th>Зона / детали</th><th>Длительность</th><th>Статус</th></tr></thead>
+      <tbody id="journalBody"></tbody>
+    </table>
+  </section>
+
+  <!-- Зоны -->
+  <section id="tab-zones" class="tab">
+    <div class="zones">
+      <div class="zone-canvas-wrap">
+        <div class="zone-toolbar">
+          <select id="zCamera"></select>
+          <button id="zReload">Обновить кадр</button>
+          <span class="hint">Щёлкайте по кадру, чтобы поставить вершины. «Замкнуть» — завершить полигон.</span>
+        </div>
+        <canvas id="zCanvas"></canvas>
+      </div>
+      <div class="zone-side">
+        <h3>Новая зона</h3>
+        <label>Название <input id="zName" placeholder="Проезд погрузчика"></label>
+        <label>Тип <select id="zKind"></select></label>
+        <label>Активна с <input id="zFrom" type="time"></label>
+        <label>до <input id="zTo" type="time"></label>
+        <div class="row">
+          <button id="zClose" class="primary">Замкнуть</button>
+          <button id="zUndo">Отменить точку</button>
+        </div>
+        <h3>Зоны камеры</h3>
+        <div id="zList"></div>
+        <button id="zSave" class="primary wide">Сохранить зоны</button>
+        <div id="zMsg" class="muted"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Статистика -->
+  <section id="tab-stats" class="tab">
+    <div class="cards" id="statCards"></div>
+    <div class="charts">
+      <div class="chart"><h3>По типам нарушений</h3><div id="chType"></div></div>
+      <div class="chart"><h3>По камерам</h3><div id="chCam"></div></div>
+      <div class="chart wide"><h3>По часам суток</h3><div id="chHour" class="hbars"></div></div>
+      <div class="chart"><h3>По дням</h3><div id="chDay"></div></div>
+      <div class="chart"><h3>Точность по отметкам операторов</h3><div id="chPrec"></div></div>
+    </div>
+  </section>
+
+  <!-- Производительность -->
+  <section id="tab-perf" class="tab">
+    <h3>Потоки в реальном времени</h3>
+    <table class="perf"><thead><tr>
+      <th>Камера</th><th>Состояние</th><th>FPS обработки</th><th>Задержка кадр→событие, мс</th>
+      <th>Модели: pre / infer / post (+ сеть, TPU), мс</th><th>Правила, мс</th><th>Люди / техника / объекты</th>
+    </tr></thead><tbody id="perfBody"></tbody></table>
+    <h3>Замеры <code>safety_service bench</code></h3>
+    <table class="perf"><thead><tr>
+      <th>Модель</th><th>Бэкенд</th><th>Потоков</th><th>infer, мс (mean / p95)</th><th>Вызов ускорителя со стороны LinQ, мс (mean / p95)</th><th>Чистое время TPU, мс</th><th>Сеть, мс</th><th>Полный цикл, мс</th><th>Пропускная способность, FPS</th><th>Когда</th>
+    </tr></thead><tbody id="benchBody"></tbody></table>
+  </section>
+</main>
+
+<!-- Карточка события -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" id="mClose">×</button>
+    <div class="modal-body">
+      <div class="media">
+        <img id="mImg" alt="кадр">
+        <div class="media-ctl">
+          <button id="mSnap">Кадр</button><button id="mClip">Фрагмент</button>
+        </div>
+      </div>
+      <div class="info">
+        <h2 id="mTitle"></h2>
+        <div id="mMeta" class="meta"></div>
+        <textarea id="mComment" placeholder="Комментарий"></textarea>
+        <div class="row">
+          <button data-st="confirmed" class="ok">Подтвердить</button>
+          <button data-st="false" class="bad">Ложное</button>
+          <button data-st="forwarded">Передать мастеру</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
